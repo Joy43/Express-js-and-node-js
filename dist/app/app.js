@@ -5,51 +5,67 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
-// Middleware to parse JSON and text data
+const port = 3000;
+//parsers
 app.use(express_1.default.json());
 app.use(express_1.default.text());
-// Logger middleware
+//logger
 const logger = (req, res, next) => {
-    console.log(`${req.method} ${req.url} - Host: ${req.hostname}`);
+    console.log(req.url, req.method, req.hostname);
     next();
 };
-// Router setup
 const userRouter = express_1.default.Router();
-// Define the user creation route
-userRouter.post('/create-user', (req, res) => {
+const courseRouter = express_1.default.Router();
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/courses", courseRouter);
+userRouter.post("/create-user", (req, res) => {
     const user = req.body;
+    console.log(user);
     res.json({
         success: true,
-        message: 'User is created successfully',
+        message: "User is created sucessfully",
         data: user,
     });
 });
-// Use the router with the base path
-app.use('/', userRouter);
-// First GET route with logger middleware
-app.get('/', logger, (req, res) => {
-    try {
-        res.send('Something');
-    }
-    catch (err) {
-        console.log(err);
-        res.status(400).json({
-            success: false,
-            message: 'Failed to get data',
-        });
-    }
-});
-// Global error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        message: 'Something went wrong!',
+courseRouter.post("/create-course", (req, res) => {
+    const course = req.body;
+    console.log(course);
+    res.json({
+        success: true,
+        message: "User is created sucessfully",
+        data: course,
     });
 });
-// Start the server
-const port = 3000;
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+app.get("/", logger, async (req, res, next) => {
+    try {
+        res.send('something');
+    }
+    catch (error) {
+        next(error);
+        // res.status(400).json({
+        //   success: false,
+        //   message: "failed to get data",
+        // });
+    }
+});
+app.post("/", logger, (req, res) => {
+    res.json({
+        message: "successfully received data",
+    });
+});
+app.all("*", (req, res) => {
+    res.status(400).json({
+        success: false,
+        message: "Route is not found",
+    });
+});
+// global error handler
+app.use((error, req, res, next) => {
+    if (error) {
+        res.status(400).json({
+            success: false,
+            message: "Something went wrong",
+        });
+    }
 });
 exports.default = app;
